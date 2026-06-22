@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoboQuest 2025 — Vihaan Parlikar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-dark: #0b0d17;
+      --bg-card: rgba(255,255,255,0.04);
+      --accent: #00d4ff;
+      --accent2: #7c3aed;
+      --accent-glow: rgba(0,212,255,0.15);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --font: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-dark);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ===== 3D CANVAS ===== */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+    }
+
+    /* ===== OVERLAY CONTENT ===== */
+    .content {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .content * { pointer-events: auto; }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 0%, var(--bg-dark) 80%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9999px;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 8vw, 6rem);
+      font-weight: 900;
+      line-height: 1.05;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .hero h1::after {
+      content: '🤖';
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      -webkit-text-fill-color: initial;
+      margin-left: 0.2em;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      color: var(--text-muted);
+      max-width: 640px;
+      margin-bottom: 2rem;
+      font-weight: 300;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat .num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+
+    .hero-stat .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 2rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 24px var(--accent-glow);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,212,255,0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      animation: bob 2s ease-in-out infinite;
+    }
+
+    .scroll-indicator .arrow {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-right: 2px solid var(--text-muted);
+      border-bottom: 2px solid var(--text-muted);
+      transform: rotate(45deg);
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ===== SECTIONS ===== */
+    section {
+      min-height: 100vh;
+      padding: 6rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .section-inner {
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.75rem;
+      background: rgba(0,212,255,0.08);
+      padding: 0.3rem 1rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(0,212,255,0.15);
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .section-title span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 680px;
+      margin-bottom: 3rem;
+    }
+
+    /* ===== CARDS ===== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(0,212,255,0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.7;
+    }
+
+    .card ul {
+      list-style: none;
+      margin-top: 0.75rem;
+    }
+
+    .card ul li {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      padding: 0.3rem 0;
+      padding-left: 1.4rem;
+      position: relative;
+    }
+
+    .card ul li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* ===== HOW SECTION ===== */
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .how-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+    }
+
+    .how-card:hover {
+      border-color: rgba(0,212,255,0.2);
+      transform: translateY(-4px);
+    }
+
+    .how-card .tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      background: rgba(0,212,255,0.1);
+      color: var(--accent);
+      padding: 0.2rem 0.7rem;
+      border-radius: 9999px;
+      margin-bottom: 0.75rem;
+    }
+
+    .how-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .how-card p, .how-card li {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .how-card ul {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+    .how-card ul li {
+      padding: 0.2rem 0;
+      padding-left: 1.3rem;
+      position: relative;
+    }
+    .how-card ul li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* ===== WHERE ===== */
+    .where-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .where-info h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .where-info p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .where-map-placeholder {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      text-align: center;
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .where-map-placeholder .big-icon {
+      font-size: 4rem;
+    }
+
+    .where-map-placeholder p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ===== TIMELINE ===== */
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+      margin-top: 2rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 2.5rem;
+      padding-left: 1.5rem;
+    }
+
+    .timeline-item:last-child { padding-bottom: 0; }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2.35rem;
+      top: 0.35rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg-dark);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .timeline-item .tl-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .timeline-item .tl-desc {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 0.25rem;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .where-content {
+        grid-template-columns: 1fr;
+      }
+      .hero-stats {
+        gap: 1.5rem;
+      }
+      section {
+        padding: 4rem 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 3D Canvas ===== -->
+  <div id="canvas-container"></div>
+
+  <!-- ===== CONTENT ===== -->
+  <div class="content">
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="top">
+      <div class="hero-badge">🏆 Dr. Homibhabha Foundation</div>
+      <h1>RoboQuest 2025</h1>
+      <p class="hero-sub">
+        1<sup>st</sup> Rank Zonal Champion &mdash; Built a line-following robot that navigated
+        tunnels, avoided obstacles, and performed U-turns autonomously.
+      </p>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num">1<sup>st</sup></div>
+          <div class="label">Zonal Rank</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">164/200</div>
+          <div class="label">MCQ Score</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">10</div>
+          <div class="label">Arduino Sketches</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">3</div>
+          <div class="label">Competition Levels</div>
+        </div>
+      </div>
+
+      <div class="hero-cta">
+        <a href="#what" class="btn btn-primary">Explore the Journey &darr;</a>
+        <a href="https://github.com/vihaanvp/RoboQuest" target="_blank" class="btn btn-outline">View on GitHub</a>
+      </div>
+
+      <div class="scroll-indicator">
+        <span>Scroll</span>
+        <div class="arrow"></div>
+      </div>
+    </section>
+
+    <!-- ===== WHAT I DID ===== -->
+    <section id="what">
+      <div class="section-inner">
+        <span class="section-label">What I Did</span>
+        <h2 class="section-title">The <span>Competition</span></h2>
+        <p class="section-sub">
+          Dr. Homibhabha Foundation's RoboQuest 2025 — a multi-level robotics championship
+          testing theoretical knowledge, practical building skills, and problem-solving under pressure.
+        </p>
+
+        <div class="card-grid">
+          <div class="card">
+            <span class="card-icon">📝</span>
+            <h3>MCQ Round</h3>
+            <p>Scored <strong>164/200</strong> in the written exam covering electronics, robotics concepts, and problem-solving — enough to secure a spot in the Zonal Round.</p>
+          </div>
+
+          <div class="card">
+            <span class="card-icon">🔧</span>
+            <h3>Zonal Practical Round</h3>
+            <p>Built a working line-following robot on the spot at Government Engineering College, Chh. Sambhajinagar. The robot had to complete a challenging line-map arena with surprise tasks.</p>
+          </div>
+
+          <div class="card">
+            <span class="card-icon">🏆</span>
+            <h3>State Level Qualification</h3>
+            <p>Secured <strong>1st place</strong> in the Zonal Round, earning qualification for the State Level Championship.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== HOW I DID ===== -->
+    <section id="how">
+      <div class="section-inner">
+        <span class="section-label">How I Did</span>
+        <h2 class="section-title">The <span>Technology</span></h2>
+        <p class="section-sub">
+          From learning enums to debugging IR sensors — here is the tech that made the robot come alive.
+        </p>
+
+        <div class="how-grid">
+          <div class="how-card">
+            <span class="tag">🧠 Concept</span>
+            <h3>Enumeration (Enums)</h3>
+            <p>A new coding concept I learned during the competition. Enums let me create custom data types for robot states — making the code far cleaner than raw integers and enabling robust state machines.</p>
+          </div>
+
+          <div class="how-card">
+            <span class="tag">🔌 Electronics</span>
+            <h3>Potential Divider Circuits</h3>
+            <p>Understood how voltage dividers work with LDRs and IR sensors. This was critical for tuning sensor thresholds so the robot could reliably distinguish black lines from the floor and detect tunnel darkness.</p>
+          </div>
+
+          <div class="how-card">
+            <span class="tag">🤖 Robot</span>
+            <h3>Line-Following Robot</h3>
+            <p>Built with an Arduino Uno, 2 IR sensors for line tracking, an HC-SR04 ultrasonic sensor for obstacle detection, an LDR for tunnel detection, and an L293D motor driver.</p>
+          </div>
+
+          <div class="how-card">
+            <span class="tag">💡 Task</span>
+            <h3>Automatic Headlights in Tunnels</h3>
+            <p>Used an LDR (light-dependent resistor) on A0 to sense ambient light. When the robot entered a dark tunnel (analogRead &lt; 450), an LED automatically turned on — just like real car headlights!</p>
+          </div>
+
+          <div class="how-card">
+            <span class="tag">🚧 Task</span>
+            <h3>Obstacle Avoidance</h3>
+            <p>Implemented multiple strategies — from simple delay-based sequences to a <strong>parallel-pass state machine</strong> that turns alongside the obstacle, passes it, and actively re-acquires the line using a sweep scan with confirmation debounce.</p>
+          </div>
+
+          <div class="how-card">
+            <span class="tag">🔄 Task</span>
+            <h3>U-Turn &amp; Return</h3>
+            <p>When both IR sensors detected the line simultaneously (end of map), the robot performed a 180° U-turn and followed the line all the way back to the start — demonstrating bidirectional navigation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== WHERE I DID ===== -->
+    <section id="where">
+      <div class="section-inner">
+        <span class="section-label">Where I Did</span>
+        <h2 class="section-title">The <span>Location</span></h2>
+        <p class="section-sub">
+          The Zonal Round was hosted at <strong>Government Engineering College, Chh. Sambhajinagar (Aurangabad)</strong>, Maharashtra.
+        </p>
+
+        <div class="where-content">
+          <div class="where-info">
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="tl-title">📋 MCQ Round</div>
+                <div class="tl-desc">Scored 164/200 — qualified for Zonal Round</div>
+              </div>
+              <div class="timeline-item">
+                <div class="tl-title">🔧 Zonal Practical Round</div>
+                <div class="tl-desc">Built and programmed a line-following robot at Government Engineering College, Chh. Sambhajinagar</div>
+              </div>
+              <div class="timeline-item">
+                <div class="tl-title">🥇 1st Place — Zonal</div>
+                <div class="tl-desc">Robot successfully completed: line following, tunnel headlights, obstacle avoidance, and U-turn tasks</div>
+              </div>
+              <div class="timeline-item">
+                <div class="tl-title">🚀 State Level Championship</div>
+                <div class="tl-desc">Qualified to compete at the State Level against top teams from across Maharashtra</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="where-map-placeholder">
+            <div class="big-icon">📍</div>
+            <h3>Government Engineering College</h3>
+            <p>Chh. Sambhajinagar (Aurangabad), Maharashtra</p>
+            <p style="font-size:0.8rem;margin-top:0.5rem;opacity:0.6;">
+              Dr. Homibhabha Foundation — RoboQuest 2025 Zonal Round
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+      <p>Built with 🤖 for RoboQuest 2025</p>
+      <div class="footer-links">
+        <a href="https://github.com/vihaanvp/RoboQuest" target="_blank">GitHub Repository</a>
+        <a href="https://in.linkedin.com/in/vihaanparlikar" target="_blank">LinkedIn</a>
+        <a href="#top">Back to Top &uarr;</a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ===== THREE.JS 3D SCENE ===== -->
+  <script>
+    (function() {
+      const container = document.getElementById('canvas-container');
+
+      // Scene
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x0b0d17, 0.035);
+
+      // Camera
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(12, 8, 16);
+      camera.lookAt(0, 0, 0);
+
+      // Renderer
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+      container.appendChild(renderer.domElement);
+
+      // Controls
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 1.0;
+      controls.maxPolarAngle = Math.PI / 2.1;
+      controls.minDistance = 6;
+      controls.maxDistance = 40;
+      controls.target.set(0, 1, 0);
+
+      // Lights
+      const ambient = new THREE.AmbientLight(0x334466, 0.4);
+      scene.add(ambient);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      dirLight.position.set(10, 20, 5);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
+      scene.add(dirLight);
+
+      const fillLight = new THREE.DirectionalLight(0x4488ff, 0.3);
+      fillLight.position.set(-10, 5, -10);
+      scene.add(fillLight);
+
+      const pointLight = new THREE.PointLight(0x00d4ff, 0.6, 20);
+      pointLight.position.set(0, 5, 0);
+      scene.add(pointLight);
+
+      // ===== GROUND / ARENA =====
+      const groundGeom = new THREE.CircleGeometry(8, 64);
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: 0x1a1e2e,
+        roughness: 0.8,
+        metalness: 0.2,
+        transparent: true,
+        opacity: 0.6,
+        side: THREE.DoubleSide,
+      });
+      const ground = new THREE.Mesh(groundGeom, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -0.05;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // Grid helper
+      const grid = new THREE.GridHelper(16, 20, 0x00d4ff, 0x334466);
+      grid.position.y = 0;
+      grid.material.transparent = true;
+      grid.material.opacity = 0.3;
+      scene.add(grid);
+
+      // ===== TRACK (oval path) =====
+      function createTrack() {
+        const points = [];
+        const a = 5.5;
+        const b = 3.5;
+        const segments = 80;
+        for (let i = 0; i <= segments; i++) {
+          const t = (i / segments) * Math.PI * 2;
+          const x = a * Math.cos(t);
+          const z = b * Math.sin(t);
+          points.push(new THREE.Vector3(x, 0.01, z));
+        }
+        const curve = new THREE.CatmullRomCurve3(points, true);
+        const tubeGeom = new THREE.TubeGeometry(curve, 100, 0.06, 8, true);
+        const tubeMat = new THREE.MeshStandardMaterial({
+          color: 0x00d4ff,
+          emissive: 0x00d4ff,
+          emissiveIntensity: 0.4,
+          roughness: 0.3,
+          metalness: 0.1,
+        });
+        const tube = new THREE.Mesh(tubeGeom, tubeMat);
+        tube.receiveShadow = true;
+        scene.add(tube);
+
+        // Center line (lighter)
+        const innerPoints = [];
+        for (let i = 0; i <= segments; i++) {
+          const t = (i / segments) * Math.PI * 2;
+          const x = (a - 0.3) * Math.cos(t);
+          const z = (b - 0.3) * Math.sin(t);
+          innerPoints.push(new THREE.Vector3(x, 0.02, z));
+        }
+        const innerCurve = new THREE.CatmullRomCurve3(innerPoints, true);
+        const innerGeom = new THREE.TubeGeometry(innerCurve, 100, 0.03, 6, true);
+        const innerMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          emissive: 0xffffff,
+          emissiveIntensity: 0.15,
+          transparent: true,
+          opacity: 0.6,
+        });
+        const innerTube = new THREE.Mesh(innerGeom, innerMat);
+        scene.add(innerTube);
+
+        return { curve, points: curve.getPoints(200) };
+      }
+
+      const track = createTrack();
+
+      // ===== ROBOT =====
+      const robotGroup = new THREE.Group();
+
+      // Body
+      const bodyGeom = new THREE.BoxGeometry(1.2, 0.4, 0.8);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: 0x2a3a6a,
+        roughness: 0.3,
+        metalness: 0.6,
+      });
+      const body = new THREE.Mesh(bodyGeom, bodyMat);
+      body.position.y = 0.2;
+      body.castShadow = true;
+      robotGroup.add(body);
+
+      // Top plate
+      const topGeom = new THREE.BoxGeometry(1.0, 0.1, 0.6);
+      const topMat = new THREE.MeshStandardMaterial({
+        color: 0x4a7a9a,
+        roughness: 0.2,
+        metalness: 0.4,
+      });
+      const top = new THREE.Mesh(topGeom, topMat);
+      top.position.y = 0.45;
+      robotGroup.add(top);
+
+      // Arduino indicator (small green block)
+      const arduinoGeom = new THREE.BoxGeometry(0.5, 0.08, 0.3);
+      const arduinoMat = new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.5 });
+      const arduino = new THREE.Mesh(arduinoGeom, arduinoMat);
+      arduino.position.set(0, 0.55, 0);
+      robotGroup.add(arduino);
+
+      // Wheels
+      function makeWheel(x, z) {
+        const wheelGeom = new THREE.CylinderGeometry(0.25, 0.25, 0.12, 16);
+        const wheelMat = new THREE.MeshStandardMaterial({
+          color: 0x1a1a1a,
+          roughness: 0.9,
+        });
+        const wheel = new THREE.Mesh(wheelGeom, wheelMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(x, 0.1, z);
+        wheel.castShadow = true;
+        return wheel;
+      }
+
+      robotGroup.add(makeWheel(-0.6, 0.5));
+      robotGroup.add(makeWheel(-0.6, -0.5));
+      robotGroup.add(makeWheel(0.6, 0.5));
+      robotGroup.add(makeWheel(0.6, -0.5));
+
+      // IR sensors (two small cylinders on front)
+      function makeIRSensor(x) {
+        const irGeom = new THREE.SphereGeometry(0.08, 8, 8);
+        const irMat = new THREE.MeshStandardMaterial({
+          color: 0xff4444,
+          emissive: 0xff4444,
+          emissiveIntensity: 0.3,
+        });
+        const ir = new THREE.Mesh(irGeom, irMat);
+        ir.position.set(x, 0.15, 0.5);
+        return ir;
+      }
+      robotGroup.add(makeIRSensor(-0.25));
+      robotGroup.add(makeIRSensor(0.25));
+
+      // Ultrasonic sensor (front)
+      const usGeom = new THREE.BoxGeometry(0.2, 0.2, 0.1);
+      const usMat = new THREE.MeshStandardMaterial({
+        color: 0x444444,
+        roughness: 0.6,
+        metalness: 0.3,
+      });
+      const us = new THREE.Mesh(usGeom, usMat);
+      us.position.set(0, 0.2, 0.6);
+      robotGroup.add(us);
+
+      // Eyes (two blue dots for "headlight")
+      function makeEye(x) {
+        const eyeGeom = new THREE.SphereGeometry(0.06, 8, 8);
+        const eyeMat = new THREE.MeshStandardMaterial({
+          color: 0x00d4ff,
+          emissive: 0x00d4ff,
+          emissiveIntensity: 0.8,
+        });
+        const eye = new THREE.Mesh(eyeGeom, eyeMat);
+        eye.position.set(x, 0.35, 0.55);
+        return eye;
+      }
+      robotGroup.add(makeEye(-0.15));
+      robotGroup.add(makeEye(0.15));
+
+      robotGroup.position.y = 0.1;
+      scene.add(robotGroup);
+
+      // ===== OBSTACLE (a box on the track) =====
+      const obsGeom = new THREE.BoxGeometry(1.0, 0.6, 0.6);
+      const obsMat = new THREE.MeshStandardMaterial({
+        color: 0xe74c3c,
+        roughness: 0.4,
+        metalness: 0.2,
+        emissive: 0xe74c3c,
+        emissiveIntensity: 0.05,
+      });
+      const obstacle = new THREE.Mesh(obsGeom, obsMat);
+      obstacle.position.set(1.5, 0.3, 2.0);
+      obstacle.castShadow = true;
+      scene.add(obstacle);
+
+      // ===== PARTICLES (ambient tech dots) =====
+      const particleCount = 800;
+      const particleGeom = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const colors = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        positions[i*3] = (Math.random() - 0.5) * 30;
+        positions[i*3+1] = Math.random() * 12;
+        positions[i*3+2] = (Math.random() - 0.5) * 30;
+
+        const c = new THREE.Color();
+        c.setHSL(0.55 + Math.random() * 0.15, 0.8, 0.5 + Math.random() * 0.3);
+        colors[i*3] = c.r;
+        colors[i*3+1] = c.g;
+        colors[i*3+2] = c.b;
+      }
+      particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      particleGeom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const particleMat = new THREE.PointsMaterial({
+        size: 0.05,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+      });
+      const particles = new THREE.Points(particleGeom, particleMat);
+      scene.add(particles);
+
+      // ===== ANIMATION LOOP =====
+      let progress = 0;
+      const speed = 0.0015;
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Move robot along track
+        progress += speed;
+        if (progress > 1) progress -= 1;
+
+        const pos = track.curve.getPoint(progress);
+        const tangent = track.curve.getTangent(progress);
+
+        robotGroup.position.set(pos.x, 0.2, pos.z);
+
+        // Face direction of movement
+        const angle = Math.atan2(tangent.x, tangent.z);
+        robotGroup.rotation.y = angle;
+
+        // Gentle bob
+        robotGroup.position.y += Math.sin(progress * Math.PI * 8) * 0.03;
+
+        // Animate particles
+        const pPos = particles.geometry.attributes.position.array;
+        for (let i = 0; i < particleCount; i++) {
+          pPos[i*3+1] += Math.sin(Date.now() * 0.0003 + i) * 0.001;
+          if (pPos[i*3+1] > 12) pPos[i*3+1] = 0;
+        }
+        particles.geometry.attributes.position.needsUpdate = true;
+
+        // Pulsing point light
+        pointLight.intensity = 0.4 + Math.sin(Date.now() * 0.002) * 0.2;
+
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      // ===== RESIZE =====
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // ===== SCROLL-BASED AUTO-ROTATE =====
+      let lastScrollY = window.scrollY;
+      window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
+        // Pause auto-rotate when user interacts
+        controls.autoRotate = scrollY < 100;
+
+        // Move camera slightly on scroll
+        const scrollFraction = Math.min(scrollY / maxScroll, 1);
+        camera.position.y = 8 + scrollFraction * 2;
+      });
+    })();
+  </script>
+</body>
+</html>
